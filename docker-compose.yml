@@ -34,12 +34,13 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
     restart: unless-stopped
+    environment:
+      - WDS_SOCKET_PORT=0
     volumes:
       - ./frontend:/app
       - /app/node_modules
     networks:
       - mern-app
-   
     depends_on:
       - api
 
