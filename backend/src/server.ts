@@ -13,21 +13,46 @@ dotenv.config();
 const app = express();
 const server = http.createServer(app);
 
-app.use(cors());
+
+app.use(cors({
+    origin: "https://auth.localhost:3000",
+    methods: ["GET", "POST"],
+    credentials: true,
+    allowedHeaders: ['Content-Type', 'Authorization'],
+}));
+
+// Enable CORS for WebSocket
+app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', 'https://auth.localhost:3000');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.header('Access-Control-Allow-Credentials', 'true');
+    if (req.method === 'OPTIONS') {
+        res.sendStatus(200);
+    } else {
+        next();
+    }
+});
 app.use(express.json());
 
 // WebSocket server
-const wss = new WebSocket.Server({ server });
+const PORT = process.env.PORT || 4004;
+
+let httpServer = server.listen(PORT, () => console.log(`Listening on ${ PORT }`));
+
+const wss = new WebSocket.Server({ server, path: '/ws' });
 (global as any).wss = wss;
 
-wss.on('connection', handleWebSocket);
+wss.on('connection', (ws, req) => {
+  console.log('New WebSocket connection', req.url);
+  handleWebSocket(ws, req);
+});
 
-// REST API routes
+wss.on('error', (error) => {
+  console.error('WebSocket server error:', error);
+});// REST API routes
 app.post('/api/messages', postMessage);
 app.get('/api/messages', getMessages);
 
-const PORT = process.env.PORT || 3000;
 
-server.listen(PORT, () => {
-  logger.info(`Server is running on http://localhost:${PORT}`);
-});
+

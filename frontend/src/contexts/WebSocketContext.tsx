@@ -1,3 +1,4 @@
+// frontend/src/contexts/WebSocketContext.tsx
 import React, { createContext, useState, useEffect, ReactNode } from "react";
 
 interface WebSocketContextProps {
@@ -19,14 +20,20 @@ export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ children }
   const [isConnected, setIsConnected] = useState(false);
 
   useEffect(() => {
-    const ws = new WebSocket("ws://localhost:3000");
+    const ws = new WebSocket("wss://api.auth.localhost/ws");
 
     ws.onopen = () => {
+      console.log("WebSocket connected");
       setIsConnected(true);
     };
 
     ws.onclose = () => {
+      console.log("WebSocket disconnected");
       setIsConnected(false);
+    };
+
+    ws.onerror = (error) => {
+      console.error("WebSocket error:", error);
     };
 
     setSocket(ws);
